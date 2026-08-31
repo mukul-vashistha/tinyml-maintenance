@@ -1,0 +1,10 @@
+id: B04-calibration-policy
+outcome: Separate probability calibration from policy selection and map risk to action.
+non_goals:
+  - claiming scenario costs are factory costs
+invariants:
+  - different validation machines calibrate probabilities and choose policy
+  - final test data changes neither calibration nor threshold
+checks:
+  - uv run pytest tests/test_evaluation.py
+  - uv run tinyml-maintenance supervised

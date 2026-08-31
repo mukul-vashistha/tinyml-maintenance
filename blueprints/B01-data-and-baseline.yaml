@@ -1,0 +1,19 @@
+id: B01-data-and-baseline
+outcome: Generate a deterministic fleet and train one leakage-safe logistic baseline.
+non_goals:
+  - hyperparameter tuning
+  - production serving
+  - custom estimator framework
+reuse:
+  - numpy and pandas for simulation
+  - sklearn Pipeline, ColumnTransformer, GroupShuffleSplit, and LogisticRegression
+files:
+  - src/tinyml_maintenance/data.py
+  - src/tinyml_maintenance/modeling.py
+  - tests/test_data.py
+  - tests/test_modeling.py
+invariants:
+  - latent and future columns are excluded
+  - one machine cannot appear in train and test
+checks:
+  - uv run pytest tests/test_data.py tests/test_modeling.py

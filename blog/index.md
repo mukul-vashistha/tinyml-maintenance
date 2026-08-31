@@ -1,0 +1,672 @@
+# The machine looked healthy. Then we checked the decision.
+
+## A guided build of a classical ML system with an AI coding agent
+
+Machine M0000 is running in the generated fleet. Its temperature rises, falls, and rises again. Vibration stays high. Load changes every six hours.
+
+Should we stop it?
+
+We cannot answer from one temperature reading. A hotter machine may be degrading, carrying more load, operating at a warmer site, or reporting sensor noise. A model can produce a score in every one of those situations. The score does not tell the operator what to do until we test what it means.
+
+This project follows that question through data, models, calibration, policy, and distribution shift. It also records how an AI coding agent helped with the work. You will see what we asked AI, what it proposed, what the engineer rejected, and which experiment settled the disagreement.
+
+If you want to work through the repository while reading, start the lab:
+
+~~~bash
+uv sync --extra dev
+uv run tinyml-maintenance lab start
+~~~
+
+The [guided lab](../labs/00-start-here/README.md) gives you the commands, agent prompts, and checkpoints for every phase.
+
+## Choose how far you want to go
+
+You do not need to read everything in one sitting.
+
+| Path | Read and run |
+|---|---|
+| Beginner | The problem, data, dummy baseline, policy, and final shift test |
+| Working professional | Add model comparison, honest splitting, calibration, and failure records |
+| Interview practice | Complete the guided lab, inspect the AI ledgers, and attempt the 90-minute challenge |
+
+All reported numbers come from files under [artifacts/results](../artifacts/results/). The article is rendered from those files. If an experiment changes, the prose changes with it.
+
+## The whole story in one table
+
+| Question | What AI first suggested | What the engineer changed | Evidence | Decision |
+|---|---|---|---|---|
+| What should we build? | A large ML platform | Defined the operating decision first | [problem contract](../PROBLEM.md) | Predict failure within 24 hours |
+| What should the data look like? | Independent rows | Generated machine histories | [data tests](../tests/test_data.py) | Preserve time and maintenance resets |
+| What should EDA contain? | Dozens of plots | Kept views tied to a pending decision | [EDA figures](../artifacts/figures/eda-failure-distribution.png) | Start with a multivariable baseline |
+| Which metric should choose a model? | Accuracy and a model leaderboard | Used validation average precision | [supervised results](../artifacts/results/supervised.json) | Reject the 96 percent dummy result |
+| How should we split? | Convenient random rows | Held out complete machines | [modeling tests](../tests/test_modeling.py) | Match evaluation to deployment |
+| How does a score become an action? | One shared validation set | Separated calibration and policy rows | [policy tests](../tests/test_policy.py) | Select threshold by cost |
+| Does the model survive a new machine type? | Good ROC-AUC means robust | Checked recall at the transferred threshold | [shift results](../artifacts/results/shifts.json) | Route unsupported cases to review |
+
+The pattern is simple:
+
+~~~text
+Question
+-> Write a hypothesis
+-> Ask AI for options
+-> Review the proposal
+-> Make one bounded change
+-> Run the experiment
+-> Keep or reject the idea
+~~~
+
+AI makes the middle of this loop faster. It does not decide whether the first question was correct or whether the final evidence is enough.
+
+---
+
+## 1. Meet machine M0000
+
+### Where are we?
+
+~~~text
+[Problem] -> Data -> EDA -> Baseline -> Models -> Other views -> Policy -> Shift
+~~~
+
+These rows come from the generated dataset. The positive label changes when a failure enters the next 24-hour window.
+
+| Timestamp | Temperature | Vibration | Load | Failure within 24h |
+|---|---:|---:|---:|---:|
+| 2026-01-21 12:00:00+00:00 | 69.52 | 3.61 | 0.60 | 0 |
+| 2026-01-21 18:00:00+00:00 | 72.10 | 3.76 | 0.64 | 0 |
+| 2026-01-22 00:00:00+00:00 | 70.18 | 3.85 | 0.60 | 0 |
+| 2026-01-22 06:00:00+00:00 | 72.72 | 3.81 | 0.61 | 1 |
+| 2026-01-22 12:00:00+00:00 | 71.34 | 3.74 | 0.55 | 1 |
+| 2026-01-22 18:00:00+00:00 | 71.19 | 3.79 | 0.49 | 1 |
+| 2026-01-23 00:00:00+00:00 | 72.68 | 3.89 | 0.57 | 1 |
+
+The readings do not jump from safe to obviously broken. Temperature moves in both directions. Vibration remains high but noisy. The target changes because a future event is approaching, not because one sensor crosses a magic number.
+
+The operator has four actions:
+
+1. continue operating;
+2. schedule an inspection;
+3. stop now;
+4. ask for human review.
+
+A false alarm costs 5 units in this exercise. A missed failure costs 50. These are teaching assumptions, not factory estimates.
+
+In simple terms, we want to answer:
+
+> Is this machine likely to fail soon, and what should the operator do with that risk?
+
+The two mistakes do not cost the same. That is asymmetric cost. The model is therefore part of a decision system, not a label generator.
+
+### What we asked AI
+
+~~~text
+Read the problem statement. Do not design a model yet.
+
+State the prediction time, target, horizon, evidence available at that time,
+possible actions, hidden assumptions, and ways a technically correct
+prediction could still produce a bad operating decision.
+~~~
+
+AI proposed data ingestion, a feature store, a registry, training services, online serving, monitoring, and retraining. None of those components could tell us whether the offline question was valid.
+
+The engineer kept the decision contract and removed the rest. The first artifact became [PROBLEM.md](../PROBLEM.md), not an empty platform.
+
+### Check your understanding
+
+Can you state what one positive target means? Can you list information the model must not see? Can you explain why a missed failure costs more than a false alarm in this exercise?
+
+If not, stop here and complete [lab phase 01](../labs/01-problem/README.md). A model cannot repair an unclear decision.
+
+---
+
+## 2. Our rules for using AI
+
+AI is inside the development environment. It inspects files, proposes a blueprint, writes a bounded patch, suggests tests, and helps diagnose failures. We still review its work in separate passes.
+
+| Review | Question |
+|---|---|
+| Repository fit | Did the change follow the existing code path? |
+| Software correctness | Does the code behave as claimed? |
+| ML validity | Is the target, split, feature set, and metric honest? |
+| Complexity | Can we delete or replace any of this code? |
+
+The order matters. A complexity review cannot tell us whether test data selected the model. A passing unit test cannot tell us whether a future column leaked into the feature set. We need both kinds of evidence.
+
+### AI can propose
+
+AI can list model families, identify existing functions, draft a small patch, and suggest failure cases.
+
+### The engineer must decide
+
+The engineer decides what the system predicts, what evidence exists at prediction time, which split represents deployment, what errors cost, and when the system must refuse to automate.
+
+### Experiments settle factual disagreements
+
+We do not change a hypothesis after seeing the result. We record the surprise, work out why it happened, and update the next question.
+
+The [AI use policy](../AI_USE.md), [blueprints](../blueprints/), and [implementation ledgers](../ai-ledger/) preserve that process. They are short on purpose. A ledger is useful only when someone can recover the requirement, proposal, correction, and evidence.
+
+---
+
+## 3. Build a world we can test
+
+### Where are we?
+
+~~~text
+Problem -> [Data] -> EDA -> Baseline -> Models -> Other views -> Policy -> Shift
+~~~
+
+We do not have a real fleet dataset for this lab. Instead of downloading a clean CSV and pretending we know how it was produced, we write down the assumptions in a generator.
+
+The generated fleet contains 13920 observations from 120 machines. A reading arrives every six hours. Each machine keeps a type and site while its load, age, maintenance time, sensor readings, and hidden degradation change.
+
+Failures reset degradation and maintenance time. Temperature sometimes goes missing. A sudden fault can occur before gradual wear reaches its threshold.
+
+The hidden values let us check the simulation. They are not model features.
+
+### Before we built it
+
+Our hypothesis was that independent rows would make the later split and rolling features meaningless. A valid generator needed machine histories.
+
+We asked AI:
+
+~~~text
+Propose the smallest time-ordered maintenance dataset that supports
+classification, remaining useful life regression, clustering, leakage tests,
+and distribution shift.
+
+Separate observable features, hidden simulator state, targets, and deliberate
+leakage traps. Do not write code yet.
+~~~
+
+The first proposal generated each row independently and calculated failure from a weighted sum. That was easy to implement. It was also the wrong world. There would be no degradation path, no maintenance reset, and no reason to group rows by machine.
+
+The approved patch generated one machine at a time. Future labels were derived only after its history existed. The last four readings were removed because their full 24-hour future window was unavailable.
+
+Open [data.py](../src/tinyml_maintenance/data.py). The trust boundary is the small feature_columns function. It rejects identifiers and any column beginning with target_, latent_, or leak_.
+
+### Run it
+
+~~~bash
+uv run tinyml-maintenance generate
+uv run pytest tests/test_data.py
+~~~
+
+### What happened?
+
+The generated failure rate is 3.97%. Temperature is missing in 1.59% of rows. The tests check determinism, ordering, class presence, and forbidden feature exclusion.
+
+That does not prove the simulator resembles a particular factory. It proves the teaching assumptions are explicit and reproducible.
+
+Continue with [lab phase 02](../labs/02-data/README.md) if you want to inspect consecutive rows and ask AI to review them for future leakage.
+
+---
+
+## 4. EDA should change what we do next
+
+### Where are we?
+
+~~~text
+Problem -> Data -> [EDA] -> Baseline -> Models -> Other views -> Policy -> Shift
+~~~
+
+If we ask AI for "complete EDA," it can produce a long notebook and still leave us unsure what to build.
+
+We used a stricter request:
+
+~~~text
+Using the problem contract and the compact data summary, propose EDA questions
+that could change model design or evaluation.
+
+For every plot, state the decision it informs. Do not return a generic
+profiling checklist.
+~~~
+
+AI suggested dozens of views. We kept two figures and one JSON summary.
+
+![Failure distribution and failure rate by machine type](../artifacts/figures/eda-failure-distribution.png)
+
+The first result tells us the label is rare. A model that predicts "healthy" for every row will appear accurate.
+
+![Temperature and vibration overlap](../artifacts/figures/eda-sensor-overlap.png)
+
+The second result shows overlap between healthy and near-failure observations. Temperature and vibration carry signal, but a single hard threshold will miss part of the story.
+
+So what changes next?
+
+- We need a dummy model that exposes the accuracy trap.
+- We need a multivariable linear baseline before nonlinear models.
+- We should compare performance across machine types because their base rates differ.
+
+That is enough EDA for the next decision. More plots can wait until a new question requires them.
+
+### Run it
+
+~~~bash
+uv run tinyml-maintenance eda
+~~~
+
+In [lab phase 03](../labs/03-eda/README.md), every observation must complete the sentence: "Because I observed this, the next experiment should do that." If the second half is missing, the plot has no job yet.
+
+---
+
+## 5. Build the deliberately stupid baseline
+
+### Where are we?
+
+~~~text
+Problem -> Data -> EDA -> [Baseline] -> Models -> Other views -> Policy -> Shift
+~~~
+
+The dummy classifier predicts the majority class. Here is what it reports on held-out machines:
+
+- Accuracy: 0.963
+- Recall: 0.000
+- F1: 0.000
+- Average precision: 0.037
+- True positives: 0
+
+About 96 percent accuracy sounds impressive until we inspect the behavior. The model detects zero failures. It says "healthy" almost every time because that answer is usually correct.
+
+When the event we care about is rare, accuracy can hide the exact failure the system was built to catch.
+
+We therefore separate several questions:
+
+- Average precision asks whether positive cases rise toward the top of the ranking.
+- Recall asks how many failures we catch at one threshold.
+- Precision asks how many alerts are correct.
+- Expected cost combines false alarms and missed failures using the operating assumptions.
+
+No single number answers all four questions.
+
+### What AI did
+
+AI built the sklearn Pipeline with imputation, scaling, one-hot encoding, and logistic regression. The engineer checked that preprocessing was fitted inside the pipeline and only on training rows.
+
+Regularization gave us another inspection:
+
+| Model | Nonzero coefficients | L1 norm | L2 norm |
+|---|---:|---:|---:|
+| logistic | 34 / 34 | 14.352 | 3.693 |
+| logistic_l1 | 28 / 34 | 7.477 | 2.096 |
+| logistic_elasticnet | 31 / 34 | 8.915 | 2.296 |
+
+L1 removes more coefficients. Elastic net sits between sparse L1 and the unpenalized baseline. This tells us how the linear boundary responds to shrinkage. It does not fix a bad split or future leakage.
+
+### Run it
+
+~~~bash
+uv run tinyml-maintenance supervised
+uv run pytest tests/test_evaluation.py tests/test_experiments.py
+~~~
+
+[Lab phase 04](../labs/04-baseline/README.md) asks you to explain the dummy confusion matrix before selecting a metric.
+
+---
+
+## 6. Compare models as different views
+
+### Where are we?
+
+~~~text
+Problem -> Data -> EDA -> Baseline -> [Models] -> Other views -> Policy -> Shift
+~~~
+
+The question for AI was not "Which model is best?" We asked what each family could teach us.
+
+| Model | Think of it as | What can go wrong |
+|---|---|---|
+| Logistic regression | One weighted boundary | Misses nonlinear interactions |
+| Decision tree | A sequence of questions | Overfits small regions |
+| Random forest | Many trees voting | Raw scores may not be probabilities |
+| Gradient boosting | Trees correcting earlier errors | Easy to tune against validation noise |
+| KNN | Similar old observations | Distance weakens in many dimensions |
+| SVM | A boundary around difficult cases | Its score needs calibration |
+
+The implementation uses sklearn. Reimplementing these algorithms would add code without improving the engineering lesson.
+
+The primary selection metric is validation average precision:
+
+| Model | Validation AP | Final test AP | Recall at validation threshold |
+|---|---:|---:|---:|
+| random_forest | 0.374 | 0.471 | 0.817 |
+| gradient_boosting | 0.362 | 0.478 | 0.817 |
+| svm | 0.361 | 0.450 | 0.769 |
+| logistic | 0.354 | 0.363 | 0.837 |
+| logistic_elasticnet | 0.349 | 0.358 | 0.846 |
+| logistic_l1 | 0.344 | 0.351 | 0.846 |
+| tree | 0.324 | 0.387 | 0.769 |
+| knn | 0.288 | 0.352 | 0.712 |
+| dummy | 0.038 | 0.037 | 0.000 |
+
+![Average precision on held-out machines](../artifacts/figures/model-comparison.png)
+
+Random forest won on validation average precision, so it became the selected candidate. Gradient boosting later showed a slightly higher test average precision. We did not switch winners after seeing that number. Doing so would let the final test set tune the decision.
+
+This is one place where AI initially made a serious mistake. The first implementation selected the maximum test average precision. A review caught it, the selection code moved to validation evidence, and a test now protects the rule. The correction is recorded in [FAILURES.md](../FAILURES.md).
+
+---
+
+## 7. A split is part of the deployment question
+
+### Where are we?
+
+~~~text
+Problem -> Data -> EDA -> Baseline -> [Honest evaluation] -> Other views -> Policy -> Shift
+~~~
+
+Before running this experiment, we wrote:
+
+> I expect random rows to score higher because readings from the same machines can appear in training and evaluation.
+
+Run the lab version before reading further:
+
+~~~bash
+uv run tinyml-maintenance lab predict split
+uv run tinyml-maintenance lab run split
+~~~
+
+The actual logistic regression result was:
+
+- Random-row average precision: 0.320
+- Held-out-machine average precision: 0.363
+
+Our hypothesis got the direction wrong. The machine-group score was higher.
+
+Does that make random splitting valid? No.
+
+Random rows ask how the model performs on more readings from machines represented during training. Group splitting asks how it performs on complete machines excluded from training. The deployment contract asks the second question.
+
+The surprise changed our explanation, not the deployment goal. This is why [lab phase 05](../labs/05-models-and-splits/README.md) saves your prediction before revealing the result.
+
+---
+
+## 8. Ask a second question with regression
+
+### Where are we?
+
+~~~text
+Predict -> [Estimate] -> Discover -> Trust -> Act -> Survive change
+~~~
+
+Classification asks, "Will it fail within 24 hours?"
+
+Regression asks, "How many useful hours may remain?"
+
+Those answers support different planning decisions. A binary alert may be enough for immediate inspection. A useful-life estimate could affect maintenance scheduling and spare capacity.
+
+The regression comparison is:
+
+| Model | MAE in hours | RMSE in hours |
+|---|---:|---:|
+| random_forest | 98.45 | 158.98 |
+| gradient_boosting | 109.63 | 153.20 |
+| linear | 129.42 | 167.65 |
+| ridge | 129.49 | 167.63 |
+| elastic_net | 129.63 | 167.64 |
+
+Random forest has the lowest mean absolute error at 98.45 hours.
+
+That sentence sounds better than the result deserves. An average miss of roughly four days may be too large for many maintenance decisions. The metric needs an operating tolerance before we call the estimate useful.
+
+### Run it
+
+~~~bash
+uv run tinyml-maintenance regression
+~~~
+
+Regression adds a view. It does not replace the near-term classifier or the action policy. [Lab phase 06](../labs/06-alternative-views/README.md) makes you compare their questions before comparing model names.
+
+---
+
+## 9. Ask whether natural machine states exist
+
+### Where are we?
+
+~~~text
+Predict -> Estimate -> [Discover] -> Trust -> Act -> Survive change
+~~~
+
+Why did clustering appear here?
+
+We are asking a different question: do the observed machine states form useful groups without using the failure label?
+
+PCA compresses the transformed feature matrix to two dimensions for viewing. Those two dimensions retain 51.2% of the transformed variance. That is a partial view, not the full data.
+
+![K-means, DBSCAN, and Gaussian mixture views](../artifacts/figures/unsupervised-views.png)
+
+The methods disagree:
+
+| Method | Clusters | Noise rate | Silhouette | Agreement with hidden regime |
+|---|---:|---:|---:|---:|
+| kmeans | 3 | 0.000 | 0.211 | -0.001 |
+| dbscan | 1 | 0.000 | not defined | 0.000 |
+| gmm | 3 | 0.000 | 0.269 | 0.003 |
+
+The generated data contains a hidden operating regime, which lets us check the story after clustering. Agreement is near zero. The colored groups do not recover those regimes.
+
+AI first described the clusters as healthy, stressed, and degrading. The engineer rejected those names. A cluster is a group under one distance or density assumption. It does not acquire a business meaning because its color looks clean.
+
+We kept the failed interpretation in [FAILURES.md](../FAILURES.md). Negative results prevent the next person from repeating the same confident story.
+
+---
+
+## 10. Turn ranking into probability
+
+### Where are we?
+
+~~~text
+Predict -> Estimate -> Discover -> [Trust] -> Act -> Survive change
+~~~
+
+The random forest ranks observations. It may assign one row 0.70 and another 0.20. Before policy uses those numbers as risk, we ask whether predicted probabilities agree with observed frequencies.
+
+That is calibration.
+
+The project splits validation machines into two disjoint groups. One group fits the calibrator. The other selects the action threshold. The held-out test machines evaluate the finished choice once.
+
+The first AI implementation reused the same validation rows for calibration and threshold selection. Tests passed, but the policy estimate was optimistic. ML review caught the reuse because software correctness alone did not.
+
+After calibration:
+
+- Test average precision: 0.471
+- Brier score: 0.0246
+- Calibration rows: 1392
+- Separate policy-selection rows: 1392
+
+Average precision remains unchanged because monotonic calibration preserves ranking. The Brier score measures probability error, so it can change.
+
+![Calibration, threshold cost, and risk coverage](../artifacts/figures/calibration-policy.png)
+
+The left plot asks whether probabilities match observed rates. The middle plot chooses a threshold under the cost table. The right plot shows what happens when the system automates only the most confident cases.
+
+---
+
+## 11. Turn probability into action
+
+### Where are we?
+
+~~~text
+Predict -> Estimate -> Discover -> Trust -> [Act] -> Survive change
+~~~
+
+Suppose a weather forecast says there is a 35 percent chance of rain. Whether you carry an umbrella may depend on what happens if you are wrong. Walking to a wedding in expensive clothes is different from taking a short evening walk.
+
+The probability can remain the same while the action changes because the consequence changed.
+
+The maintenance policy works the same way. A missed failure costs 50 units in our scenario. A false alarm costs 5. Validation data selects the calibrated threshold with the lowest expected cost.
+
+The selected threshold is 0.040, not 0.5.
+
+At that threshold:
+
+- Recall: 81.7%
+- Precision: 27.7%
+- True positives: 85
+- False negatives: 19
+- Expected cost per test row: 0.740
+
+The final test actions are:
+
+| Action | Rows |
+|---|---:|
+| continue | 2464 |
+| schedule_inspection | 267 |
+| human_review | 36 |
+| stop_now | 17 |
+
+Human review is part of the policy. It handles uncertain cases instead of forcing every score into an automated answer.
+
+In [lab phase 07](../labs/07-calibration-and-policy/README.md), you trace one score through raw ranking, calibration, threshold selection, and action. Those are separate jobs, and AI must not collapse them into one function without evidence.
+
+---
+
+## 12. Break the world
+
+### Where are we?
+
+~~~text
+Predict -> Estimate -> Discover -> Trust -> Act -> [Survive change]
+~~~
+
+The model worked on held-out machines from the generated fleet. We now change the evaluation world in two ways:
+
+1. train on earlier timestamps and test later timestamps;
+2. train without machine type D and test only on type D.
+
+Before running, our hypothesis was that performance and action quality would weaken under both shifts.
+
+### Future time
+
+| Metric | Value |
+|---|---:|
+| ROC-AUC | 0.929 |
+| Average precision | 0.393 |
+| Recall | 0.882 |
+| True positives | 45 |
+| False negatives | 6 |
+
+### Unseen machine type
+
+| Metric | Value |
+|---|---:|
+| ROC-AUC | 0.880 |
+| Average precision | 0.410 |
+| Recall | 0.000 |
+| True positives | 0 |
+| False negatives | 40 |
+
+AI looked at the unseen-type ROC-AUC and said the model remained robust.
+
+Then we checked the confusion matrix. The transferred threshold found zero true positives and missed all 40 failures.
+
+The model has not forgotten everything. It can still rank risky rows above safer rows better than chance. The old cutoff no longer produces a useful action.
+
+That distinction matters:
+
+> A model can retain ranking information while its operating policy fails.
+
+The correct response is not to tune a threshold on the unseen test set. We need new validation evidence, recalibration, perhaps a policy by machine family, and a human-review path while support is uncertain.
+
+[Lab phase 08](../labs/08-shift-and-handoff/README.md) gives you the misleading AI claim and asks you to review it before reading the reference.
+
+---
+
+## 13. What AI got wrong
+
+The mistakes are part of the project. Hiding them would remove most of the engineering lesson.
+
+| AI proposal or interpretation | Why it failed | What changed |
+|---|---|---|
+| Build the entire ML platform first | No baseline or trusted evaluation existed | Kept the decision contract and smallest vertical slice |
+| Generate independent rows | Removed history and made deployment splitting meaningless | Generated time-ordered machines |
+| Produce a complete EDA notebook | Most plots had no pending decision | Kept two figures and a compact summary |
+| Choose the highest test AP | Used final evaluation to select the model | Selected on validation AP and added a test |
+| Reuse validation rows for calibration and policy | Tuned two stages on the same evidence | Split validation machines |
+| Treat good ROC-AUC under shift as robustness | The transferred threshold had zero recall | Checked action metrics and abstained |
+| Name clusters from their plot | The labels had almost no agreement with hidden regimes | Kept the negative result |
+
+AI was useful in every row. It surfaced options quickly, wrote patches, and helped inspect failures. The engineer still had to ask whether the proposal answered the deployment question.
+
+Read the full [failure record](../FAILURES.md) beside the [implementation ledgers](../ai-ledger/).
+
+---
+
+## 14. What the engineer did
+
+The engineer did not spend most of the project typing model code. Sklearn already had the algorithms.
+
+The work was:
+
+- fixing the prediction time and operating action;
+- deciding which evidence existed at that time;
+- defining hidden and future columns;
+- choosing a split that matched deployment;
+- separating model selection, calibration, policy selection, and final test;
+- writing hypotheses before experiments;
+- keeping results that contradicted the expected story;
+- checking confusion matrices after attractive ranking metrics;
+- deciding when automation should stop.
+
+The final Ponytail audit then asked which code could disappear. It removed an unused Makefile, unused model helpers, redundant imports, an unused setting, an unused version constant, and the PyYAML dependency. Python's tomllib now reads the flat configuration.
+
+That audit happened after correctness and ML review. Deleting code is useful only after we know the remaining code answers the right question. The [Ponytail ledger](../ai-ledger/B07-ponytail-audit.md) records the actual findings and accepted changes.
+
+---
+
+## 15. Work through the guided lab
+
+The repository includes a self-guided coach and reproducible command line:
+
+~~~bash
+uv run tinyml-maintenance lab start
+uv run tinyml-maintenance lab doctor
+uv run tinyml-maintenance lab status
+~~~
+
+The early phases explain concepts before asking the learner to interpret files. Support decreases as the learner progresses:
+
+~~~text
+EXPLAIN -> EXPLORE -> RUN -> INTERPRET -> REVIEW -> RECORD
+~~~
+
+Beginner mode assumes the article has not been read. Accelerated mode shortens introductory ML explanations but keeps the same evidence requirements. The agent prompts remain separated by purpose: inspect, propose, implement a bounded change, and review.
+
+The private record lives at .tinyml-lab/student-log.md. The learner may write it, or the coach may draft it from agreed answers. An AI-drafted entry must distinguish student reasoning from AI explanation and cite only evidence that was actually inspected or run.
+
+The command line does not grade understanding. It checks whether the required repository evidence exists and saves progress. The coach reviews the explanation, while the learner keeps ownership of predictions, trade-offs, and operating decisions.
+
+Start with [phase 00](../labs/00-start-here/README.md). The [guided-lab ledger](../ai-ledger/B08-guided-lab.md) records how this teaching layer was proposed, tested, and reduced after review.
+
+---
+
+## 16. Extend it in 90 minutes
+
+After the guided phases, the [independent challenge](../challenge/README.md) gives you an unfamiliar ML codebase and 90 minutes to ship one capability.
+
+Possible extensions include:
+
+- calibration drift monitoring;
+- thresholds by machine family;
+- uncertainty-aware abstention;
+- a temporal-feature ablation;
+- model compatibility checks;
+- support for a new machine type.
+
+One capability is enough. The assessment looks at how you inspect the repository, use AI, review generated code, run an experiment, and explain the remaining risk. The [rubric](../challenge/RUBRIC.md) scores the feature and the engineering process.
+
+---
+
+## 17. Reproduce it, then disagree
+
+Run the complete project:
+
+~~~bash
+uv run pytest
+uv run tinyml-maintenance all
+~~~
+
+Then change one assumption. Raise the missed-failure cost. Remove rolling features. Hold out a site. Give calibration less data. Replace the selected model with logistic regression.
+
+Write what you expect before running. Keep the result if it disagrees.
+
+This was never a tutorial about memorizing random forest. It is a project about figuring things out when the answer is not known in advance. AI can search the repository, propose approaches, and make implementation cheaper. The engineer still decides what question to ask, what failure to care about, and whether the evidence is good enough to act.

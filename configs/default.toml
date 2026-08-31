@@ -1,0 +1,9 @@
+seed = 42
+n_machines = 120
+n_steps = 120
+step_hours = 6
+horizon_hours = 24
+false_alarm_cost = 5
+missed_failure_cost = 50
+data_path = "data/maintenance.csv"
+artifact_dir = "artifacts"

@@ -1,0 +1,26 @@
+{
+  "pca_explained_variance": [
+    0.3630491038922874,
+    0.1489545922953976
+  ],
+  "algorithms": {
+    "kmeans": {
+      "clusters": 3,
+      "noise_rate": 0.0,
+      "silhouette": 0.2112800672271773,
+      "adjusted_rand_vs_latent_regime": -0.0006447256923475159
+    },
+    "dbscan": {
+      "clusters": 1,
+      "noise_rate": 0.0,
+      "silhouette": null,
+      "adjusted_rand_vs_latent_regime": 0.0
+    },
+    "gmm": {
+      "clusters": 3,
+      "noise_rate": 0.0,
+      "silhouette": 0.26860153954377364,
+      "adjusted_rand_vs_latent_regime": 0.003056469170254429
+    }
+  }
+}

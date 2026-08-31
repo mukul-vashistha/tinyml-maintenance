@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="360" viewBox="0 0 1100 360" role="img" aria-labelledby="title desc">
+  <title id="title">From telemetry to an operating action</title>
+  <desc id="desc">Machine history enters a model, then calibration, cost based threshold selection, and an action with a human review path.</desc>
+  <rect width="1100" height="360" fill="#f8fafc"/>
+  <text x="50" y="48" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#172033">A score is not yet a decision</text>
+  <g font-family="Inter, Arial, sans-serif" text-anchor="middle">
+    <g stroke-width="2">
+      <rect x="55" y="115" width="175" height="88" rx="14" fill="#e8f0fe" stroke="#3b6fb6"/>
+      <rect x="285" y="115" width="175" height="88" rx="14" fill="#e8f0fe" stroke="#3b6fb6"/>
+      <rect x="515" y="115" width="175" height="88" rx="14" fill="#e7f6ec" stroke="#2f855a"/>
+      <rect x="745" y="115" width="175" height="88" rx="14" fill="#fff4db" stroke="#d97706"/>
+      <rect x="800" y="255" width="220" height="64" rx="14" fill="#f4e8ff" stroke="#805ad5"/>
+    </g>
+    <g fill="#172033" font-size="19">
+      <text x="142" y="150">Machine history</text><text x="142" y="177" font-size="15">past and current evidence</text>
+      <text x="372" y="150">Model score</text><text x="372" y="177" font-size="15">useful for ranking</text>
+      <text x="602" y="150">Calibration</text><text x="602" y="177" font-size="15">score becomes probability</text>
+      <text x="832" y="145">Cost and threshold</text><text x="832" y="172" font-size="15">continue, inspect, or stop</text>
+      <text x="910" y="294">Human review when support is weak</text>
+    </g>
+  </g>
+  <g stroke="#64748b" stroke-width="3" fill="none">
+    <path d="M230 159h49"/><path d="M460 159h49"/><path d="M690 159h49"/><path d="M832 203v46"/>
+  </g>
+  <g fill="#64748b">
+    <path d="M279 159l-11-6v12z"/><path d="M509 159l-11-6v12z"/><path d="M739 159l-11-6v12z"/>
+    <path d="M832 249l-6-11h12z"/>
+  </g>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="510" viewBox="0 0 1100 510" role="img" aria-labelledby="title desc">
+  <title id="title">Repository evidence map</title>
+  <desc id="desc">The problem contract leads to blueprints, source code, tests, artifacts, decisions, the article, and the guided lab.</desc>
+  <rect width="1100" height="510" fill="#f8fafc"/>
+  <text x="50" y="48" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#172033">How the files connect</text>
+  <g font-family="Inter, Arial, sans-serif" text-anchor="middle" fill="#172033">
+    <g stroke-width="2">
+      <rect x="430" y="78" width="240" height="64" rx="12" fill="#fff4db" stroke="#d97706"/>
+      <rect x="105" y="200" width="200" height="64" rx="12" fill="#e8f0fe" stroke="#3b6fb6"/>
+      <rect x="345" y="200" width="200" height="64" rx="12" fill="#e8f0fe" stroke="#3b6fb6"/>
+      <rect x="585" y="200" width="200" height="64" rx="12" fill="#e7f6ec" stroke="#2f855a"/>
+      <rect x="825" y="200" width="200" height="64" rx="12" fill="#e7f6ec" stroke="#2f855a"/>
+      <rect x="225" y="345" width="260" height="64" rx="12" fill="#f4e8ff" stroke="#805ad5"/>
+      <rect x="615" y="345" width="260" height="64" rx="12" fill="#f4e8ff" stroke="#805ad5"/>
+    </g>
+    <text x="550" y="117" font-size="20">PROBLEM.md</text>
+    <text x="205" y="239" font-size="18">blueprints/ and ledgers/</text>
+    <text x="445" y="239" font-size="18">src/</text>
+    <text x="685" y="239" font-size="18">tests/</text>
+    <text x="925" y="239" font-size="18">artifacts/</text>
+    <text x="355" y="384" font-size="18">decisions and failures</text>
+    <text x="745" y="384" font-size="18">article and guided lab</text>
+  </g>
+  <g stroke="#64748b" stroke-width="3" fill="none">
+    <path d="M500 142L230 195"/><path d="M530 142L455 195"/><path d="M570 142L675 195"/>
+    <path d="M600 142L910 195"/><path d="M445 264L370 339"/><path d="M685 264L430 339"/>
+    <path d="M925 264L780 339"/><path d="M685 264L710 339"/>
+  </g>
+</svg>

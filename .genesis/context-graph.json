@@ -1,0 +1,18 @@
+{
+  "nodes": ["problem", "generator", "features", "splits", "models", "evaluation", "policy", "blog", "challenge"],
+  "edges": [
+    ["problem", "generator"],
+    ["generator", "features"],
+    ["features", "splits"],
+    ["splits", "models"],
+    ["models", "evaluation"],
+    ["evaluation", "policy"],
+    ["policy", "blog"],
+    ["blog", "challenge"]
+  ],
+  "invariants": [
+    "No future or latent column may reach a model pipeline.",
+    "Thresholds and model choices use training and validation evidence, never the final test result.",
+    "Every numeric blog claim must be recoverable from artifacts/results."
+  ]
+}

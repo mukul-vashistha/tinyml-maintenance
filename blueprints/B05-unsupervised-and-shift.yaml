@@ -1,0 +1,10 @@
+id: B05-unsupervised-and-shift
+outcome: Compare operating-regime views and expose performance under time and machine-type shift.
+non_goals:
+  - treating a visualization as proof
+  - automatically naming discovered clusters
+reuse:
+  - sklearn PCA, KMeans, DBSCAN, and GaussianMixture
+checks:
+  - uv run pytest tests/test_analysis.py
+  - uv run tinyml-maintenance experiments

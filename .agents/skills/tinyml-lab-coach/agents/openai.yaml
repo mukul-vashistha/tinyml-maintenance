@@ -1,0 +1,4 @@
+interface:
+  display_name: "TinyML Lab Coach"
+  short_description: "Beginner-first coach for the TinyML lab"
+  default_prompt: "Start my current TinyML lab phase in beginner mode. Explain the problem first, ask one question at a time, and help me save an honest learning record."

@@ -1,0 +1,74 @@
+title = "TinyML maintenance guided lab"
+version = 1
+
+[[phases]]
+id = "00"
+slug = "start-here"
+title = "Start here"
+question = "What is this project trying to predict, and why?"
+minutes = 20
+required = ["README.md", "PROBLEM.md"]
+
+[[phases]]
+id = "01"
+slug = "problem"
+title = "Define the decision"
+question = "What must the system predict, and what will someone do with the answer?"
+minutes = 35
+required = ["PROBLEM.md", "tests/test_data.py"]
+
+[[phases]]
+id = "02"
+slug = "data"
+title = "Build and inspect the data"
+question = "Can we create machine histories without leaking the future?"
+minutes = 55
+required = ["data/maintenance.csv", "artifacts/results/eda.json", "tests/test_data.py"]
+
+[[phases]]
+id = "03"
+slug = "eda"
+title = "Use EDA to choose the next question"
+question = "Which observations should change what we build next?"
+minutes = 45
+required = ["artifacts/figures/eda-failure-distribution.png", "artifacts/figures/eda-sensor-overlap.png"]
+
+[[phases]]
+id = "04"
+slug = "baseline"
+title = "Build a baseline and choose metrics"
+question = "How can 96 percent accuracy still detect no failures?"
+minutes = 55
+required = ["artifacts/results/supervised.json", "tests/test_evaluation.py"]
+
+[[phases]]
+id = "05"
+slug = "models-and-splits"
+title = "Compare models and test the split"
+question = "Which model ranks risk well on machines it has never seen?"
+minutes = 75
+required = ["artifacts/figures/model-comparison.png", "artifacts/results/supervised.json", "tests/test_modeling.py"]
+
+[[phases]]
+id = "06"
+slug = "alternative-views"
+title = "Use regression and clustering as other views"
+question = "What do we learn by asking about useful life and machine states?"
+minutes = 60
+required = ["artifacts/results/regression.json", "artifacts/results/unsupervised.json", "artifacts/figures/unsupervised-views.png"]
+
+[[phases]]
+id = "07"
+slug = "calibration-and-policy"
+title = "Calibrate risk and choose an action"
+question = "How does a model score become an operating decision?"
+minutes = 75
+required = ["artifacts/results/calibration.csv", "artifacts/results/thresholds.csv", "artifacts/figures/calibration-policy.png"]
+
+[[phases]]
+id = "08"
+slug = "shift-and-handoff"
+title = "Test shift, abstain, and hand off the work"
+question = "What should the system do when the operating world changes?"
+minutes = 65
+required = ["artifacts/results/shifts.json", "FAILURES.md", "challenge/README.md"]

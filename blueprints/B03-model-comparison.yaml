@@ -1,0 +1,14 @@
+id: B03-model-comparison
+outcome: Compare shortlisted sklearn classifiers on machines excluded from training.
+non_goals:
+  - exhaustive hyperparameter search
+  - choosing from test performance alone
+reuse:
+  - sklearn estimators and metrics
+invariants:
+  - one shared group split
+  - validation-selected thresholds
+  - untouched final test probabilities
+checks:
+  - uv run pytest
+  - uv run tinyml-maintenance supervised

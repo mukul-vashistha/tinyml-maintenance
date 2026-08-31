@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">The guided learning loop</title>
+  <desc id="desc">A sequence from question to prediction, AI proposal, engineer review, small patch, experiment, and decision.</desc>
+  <rect width="1200" height="300" fill="#f8fafc"/>
+  <text x="60" y="52" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700" fill="#172033">One question at a time</text>
+  <g font-family="Inter, Arial, sans-serif" font-size="18" text-anchor="middle">
+    <g fill="#e8f0fe" stroke="#3b6fb6" stroke-width="2">
+      <rect x="45" y="105" width="130" height="68" rx="12"/><rect x="205" y="105" width="130" height="68" rx="12"/>
+      <rect x="365" y="105" width="130" height="68" rx="12"/><rect x="525" y="105" width="130" height="68" rx="12"/>
+      <rect x="685" y="105" width="130" height="68" rx="12"/><rect x="845" y="105" width="130" height="68" rx="12"/>
+      <rect x="1005" y="105" width="150" height="68" rx="12"/>
+    </g>
+    <g fill="#172033">
+      <text x="110" y="146">Question</text><text x="270" y="146">Prediction</text>
+      <text x="430" y="136">Ask AI</text><text x="430" y="158">for options</text>
+      <text x="590" y="136">Engineer</text><text x="590" y="158">reviews</text>
+      <text x="750" y="136">Small</text><text x="750" y="158">patch</text>
+      <text x="910" y="146">Experiment</text><text x="1080" y="146">Decision</text>
+    </g>
+  </g>
+  <g stroke="#64748b" stroke-width="3" fill="none">
+    <path d="M175 139h24"/><path d="M335 139h24"/><path d="M495 139h24"/><path d="M655 139h24"/>
+    <path d="M815 139h24"/><path d="M975 139h24"/>
+  </g>
+  <g fill="#64748b">
+    <path d="M199 139l-10-6v12z"/><path d="M359 139l-10-6v12z"/><path d="M519 139l-10-6v12z"/>
+    <path d="M679 139l-10-6v12z"/><path d="M839 139l-10-6v12z"/><path d="M999 139l-10-6v12z"/>
+  </g>
+  <path d="M1080 184c0 66-970 66-970 0" fill="none" stroke="#d97706" stroke-width="3" stroke-dasharray="8 7"/>
+  <path d="M110 184l-8 14h16z" fill="#d97706"/>
+  <text x="600" y="258" font-family="Inter, Arial, sans-serif" font-size="17" text-anchor="middle" fill="#7c4a03">The decision creates the next question</text>
+</svg>

@@ -1,0 +1,34 @@
+{
+  "future_time": {
+    "accuracy": 0.9541666666666667,
+    "balanced_accuracy": 0.919128106434608,
+    "precision": 0.32608695652173914,
+    "recall": 0.8823529411764706,
+    "f1": 0.47619047619047616,
+    "roc_auc": 0.928634516869811,
+    "average_precision": 0.3930855988412464,
+    "brier": 0.09166278233943154,
+    "log_loss": 0.36035976137364656,
+    "threshold": 0.79,
+    "tn": 2016,
+    "fp": 93,
+    "fn": 6,
+    "tp": 45
+  },
+  "unseen_machine_type": {
+    "accuracy": 0.9568965517241379,
+    "balanced_accuracy": 0.5,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "roc_auc": 0.8801520270270271,
+    "average_precision": 0.409878016849377,
+    "brier": 0.03617849793017483,
+    "log_loss": 0.13307838402960667,
+    "threshold": 0.65,
+    "tn": 888,
+    "fp": 0,
+    "fn": 40,
+    "tp": 0
+  }
+}

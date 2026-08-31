@@ -1,0 +1,8 @@
+id: B06-blog-and-challenge
+outcome: Render a traceable build-along article and package the extension assessment.
+invariants:
+  - numeric claims come from JSON or CSV artifacts
+  - each implementation chapter links code, blueprint, ledger, and command
+checks:
+  - uv run tinyml-maintenance all
+  - test -s blog/index.md

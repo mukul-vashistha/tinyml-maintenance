@@ -1,0 +1,13 @@
+id: B02-eda
+outcome: Produce an evidence-led EDA report and two question-driven figures.
+non_goals:
+  - automated profiling framework
+  - model selection
+reuse:
+  - pandas groupby
+  - matplotlib
+files:
+  - src/tinyml_maintenance/analysis.py
+checks:
+  - uv run pytest tests/test_analysis.py
+  - uv run tinyml-maintenance eda
