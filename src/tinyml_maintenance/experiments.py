@@ -204,6 +204,49 @@ def regression(frame: pd.DataFrame, artifact_dir: str | Path, seed: int = 42) ->
     return result
 
 
+def ablation(
+    frame: pd.DataFrame,
+    artifact_dir: str | Path,
+    seed: int = 42,
+    name: str = "logistic",
+    exclude_suffix: str = "_delta_6h",
+) -> dict[str, object]:
+    """Compare validation average precision with and without one temporal feature group.
+
+    Both runs use the same machine-grouped split and the same validation
+    rows. The final test set is never touched here, matching phase 07's
+    calibration/policy rule: only validation evidence selects between
+    feature sets.
+    """
+
+    artifact = Path(artifact_dir)
+    split = group_split(frame, seed)
+    excluded_columns = [column for column in frame.columns if column.endswith(exclude_suffix)]
+    if not excluded_columns:
+        raise ValueError(f"no columns end with {exclude_suffix!r}")
+
+    def _validation_average_precision(features: list[str]) -> float:
+        model = classifier_pipeline(split.train[features], classifiers(seed)[name])
+        model.fit(split.train[features], split.train[TARGET])
+        probability = model.predict_proba(split.validation[features])[:, 1]
+        return classification_metrics(split.validation[TARGET], probability)["average_precision"]
+
+    full_features = feature_columns(frame)
+    reduced_features = feature_columns(frame, exclude=excluded_columns)
+    full_ap = _validation_average_precision(full_features)
+    reduced_ap = _validation_average_precision(reduced_features)
+
+    result = {
+        "model": name,
+        "excluded_columns": excluded_columns,
+        "full_feature_validation_average_precision": full_ap,
+        "excluded_feature_validation_average_precision": reduced_ap,
+        "drop": full_ap - reduced_ap,
+    }
+    _write_json(result, artifact / "results" / "ablation.json")
+    return result
+
+
 def shifts(
     frame: pd.DataFrame,
     artifact_dir: str | Path,

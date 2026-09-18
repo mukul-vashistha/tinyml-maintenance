@@ -1,0 +1,13 @@
+{
+  "model": "logistic",
+  "excluded_columns": [
+    "temperature_delta_6h",
+    "vibration_delta_6h",
+    "pressure_delta_6h",
+    "rpm_delta_6h",
+    "power_delta_6h"
+  ],
+  "full_feature_validation_average_precision": 0.35367375477990104,
+  "excluded_feature_validation_average_precision": 0.3380054385583782,
+  "drop": 0.015668316221522816
+}

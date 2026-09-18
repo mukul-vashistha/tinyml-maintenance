@@ -1,0 +1,19 @@
+id: B09-temporal-ablation
+outcome: >
+  We can compare validation average precision with and without the 6-hour
+  trend feature (delta_6h), using the supervised model comparison, so the
+  team can tell whether it actually improves prediction.
+non_goals:
+  - evaluating the other temporal features (mean_24h, std_24h, warning_count_24h)
+  - retuning the action threshold
+  - changing which model family is used for comparison
+files_likely_to_change:
+  - src/tinyml_maintenance/data.py (feature_columns() gains the ability to exclude delta_6h columns)
+  - src/tinyml_maintenance/experiments.py (a new comparison path/command that trains with and without delta_6h)
+invariants:
+  - compares using validation data only, never the final test set
+  - target_/latent_/leak_ and identifier filtering in feature_columns() keeps working unchanged
+  - default (no-exclusion) behavior of feature_columns() is unchanged, so existing phase-05 results still reproduce
+checks:
+  - uv run pytest tests/test_data.py
+  - uv run tinyml-maintenance ablate

@@ -55,3 +55,24 @@ Phase checks confirm that required files, tests, predictions, and artifacts exis
 ## D10: natural writing is an acceptance check
 
 Learner-facing prose follows the supplied humanizer rules. Claims must come from project evidence or the teaching material. The automated check rejects high-signal chatbot phrases, decorative punctuation, and several stock AI words. A human review still checks rhythm, clarity, and whether the writing sounds like the instructor.
+
+## D11 — Temporal delta feature: keep, pending broader evidence
+
+The 6-hour trend feature (delta_6h) was ablated against validation average
+precision using logistic regression on the group-by-machine split. The
+drop (0.354 -> 0.338, about 0.016) is smaller than the ~0.02 spread already
+seen between different model families in the phase-05 comparison, so the
+"matters a lot" hypothesis is rejected for this scope.
+
+Decision: keep delta_6h in the feature set for now. No evidence supports
+removing it, and it is cheap to compute.
+
+Remaining risk: this result only covers delta_6h in isolation, on one
+classifier (logistic), on one split. It does not rule out a larger effect
+on tree-based models, or a larger combined effect when delta_6h is tested
+together with the other temporal features (mean_24h, std_24h,
+warning_count_24h) rather than alone.
+
+Next experiment: extend the ablation to the full temporal feature group,
+tested across all nine phase-05 classifiers, to see whether any model
+family shows a bigger drop than logistic did here.

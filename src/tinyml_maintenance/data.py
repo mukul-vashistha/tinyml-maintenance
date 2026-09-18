@@ -1,5 +1,6 @@
 """Synthetic, time-ordered predictive-maintenance data."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -150,14 +151,21 @@ def generate_dataset(config: SimulationConfig | None = None) -> pd.DataFrame:
     return _rolling_features(frame)
 
 
-def feature_columns(frame: pd.DataFrame) -> list[str]:
-    """Return prediction-time columns and reject hidden/future values by construction."""
+def feature_columns(frame: pd.DataFrame, exclude: Iterable[str] = ()) -> list[str]:
+    """Return prediction-time columns and reject hidden/future values by construction.
 
+    ``exclude`` names additional columns to drop (for example, one temporal
+    feature group under ablation). It never overrides the identifier and
+    leakage filtering above.
+    """
+
+    excluded = set(exclude)
     return [
         column
         for column in frame.columns
         if column not in IDENTIFIER_COLUMNS
         and not column.startswith(FORBIDDEN_FEATURE_PREFIXES)
+        and column not in excluded
     ]
 
 

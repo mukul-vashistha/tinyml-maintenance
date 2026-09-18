@@ -6,7 +6,7 @@ from pathlib import Path
 
 from .analysis import eda, unsupervised
 from .data import SimulationConfig, generate_dataset, load_dataset, save_dataset
-from .experiments import regression, shifts, supervised
+from .experiments import ablation, regression, shifts, supervised
 from .lab import GuidedLab
 from .reporting import render_blog
 
@@ -64,6 +64,12 @@ def run(command: str, config: dict) -> None:
             config["missed_failure_cost"],
         )
         print("shift evaluation complete")
+    if command in {"ablate", "experiments", "all"}:
+        result = ablation(frame, config["artifact_dir"], config["seed"])
+        print(
+            f"validation average precision: full={result['full_feature_validation_average_precision']:.3f} "
+            f"without_delta_6h={result['excluded_feature_validation_average_precision']:.3f}"
+        )
     if command in {"blog", "all"}:
         print(f"rendered {render_blog()}")
 
@@ -121,7 +127,19 @@ def _run_lab(arguments: list[str]) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    commands = ["generate", "eda", "supervised", "regression", "unsupervised", "shifts", "experiments", "blog", "all", "lab"]
+    commands = [
+        "generate",
+        "eda",
+        "supervised",
+        "regression",
+        "unsupervised",
+        "shifts",
+        "ablate",
+        "experiments",
+        "blog",
+        "all",
+        "lab",
+    ]
     parser.add_argument("command", choices=commands)
     parser.add_argument("--config", default="configs/default.toml")
     arguments, remaining = parser.parse_known_args()
